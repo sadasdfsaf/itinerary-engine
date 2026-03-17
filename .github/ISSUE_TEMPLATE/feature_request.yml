@@ -1,0 +1,37 @@
+name: Feature request
+description: Propose a new engine capability, adapter contract, API improvement, or benchmark idea.
+title: "[feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What developer workflow is blocked or awkward today?
+      placeholder: There is no way to express day-level hard constraints for partial replan.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Be concrete about interfaces, schema, or behavior.
+      placeholder: Add constraint bundles to TripRequest and Patcher inputs.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What should maintainers reject, and why?
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Expected impact
+      options:
+        - low
+        - medium
+        - high
+    validations:
+      required: true

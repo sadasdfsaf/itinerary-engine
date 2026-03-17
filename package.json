@@ -1,0 +1,12 @@
+{
+  "name": "itinerary-engine",
+  "private": true,
+  "workspaces": [
+    "apps/playground"
+  ],
+  "scripts": {
+    "dev:playground": "npm run dev --workspace @itinerary-engine/playground",
+    "build:playground": "npm run build --workspace @itinerary-engine/playground",
+    "start:playground": "npm run start --workspace @itinerary-engine/playground"
+  }
+}

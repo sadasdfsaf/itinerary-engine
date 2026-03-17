@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "itinerary-engine"
+version = "0.1.0"
+description = "Editable itinerary runtime for developer products."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+authors = [
+  { name = "itinerary-engine maintainers" }
+]
+dependencies = [
+  "fastapi>=0.110,<1.0",
+  "uvicorn>=0.30,<1.0",
+  "pydantic>=1.10,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx>=0.27,<1.0",
+  "pytest>=8.0,<9.0",
+  "ruff>=0.4,<1.0",
+]
+
+[tool.setuptools]
+packages = [
+  "itinerary_engine.schema",
+  "itinerary_engine.planner",
+  "itinerary_engine.candidate_selector",
+  "itinerary_engine.edit_parser",
+  "itinerary_engine.patcher",
+  "itinerary_engine.evaluator",
+  "itinerary_engine.adapters",
+]
+
+[tool.setuptools.package-dir]
+"itinerary_engine.schema" = "packages/schema/itinerary_engine/schema"
+"itinerary_engine.planner" = "packages/planner/itinerary_engine/planner"
+"itinerary_engine.candidate_selector" = "packages/candidate_selector/itinerary_engine/candidate_selector"
+"itinerary_engine.edit_parser" = "packages/edit_parser/itinerary_engine/edit_parser"
+"itinerary_engine.patcher" = "packages/patcher/itinerary_engine/patcher"
+"itinerary_engine.evaluator" = "packages/evaluator/itinerary_engine/evaluator"
+"itinerary_engine.adapters" = "packages/adapters/itinerary_engine/adapters"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

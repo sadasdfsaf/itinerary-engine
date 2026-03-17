@@ -1,0 +1,40 @@
+{
+  "trip_request": {
+    "destination": "tokyo",
+    "days": 3,
+    "travelers": 1,
+    "total_budget": 450,
+    "budget_currency": "USD",
+    "daily_budget_soft_limit": 120,
+    "interests": ["food", "culture", "shopping"],
+    "excluded_categories": [],
+    "pace": "balanced",
+    "mobility": "standard",
+    "with_kids": false,
+    "transport_mode": "mixed",
+    "notes": "First time in the city."
+  },
+  "itinerary": {
+    "itinerary_id": "trip_tokyo_3d",
+    "destination": "tokyo",
+    "days": 3,
+    "summary": "A balanced 3-day plan for tokyo focused on food, culture, shopping.",
+    "assumptions": [
+      "Static catalog adapter used",
+      "Travel time is heuristic in v0.1",
+      "Food and transport estimates are coarse"
+    ],
+    "day_plans": [],
+    "budget_summary": {
+      "currency": "USD",
+      "estimated_total": 264,
+      "activities_total": 174,
+      "food_total": 60,
+      "transport_total": 30,
+      "buffer_total": 0,
+      "within_budget": true
+    },
+    "tags": ["balanced", "editable"],
+    "version": 1
+  }
+}

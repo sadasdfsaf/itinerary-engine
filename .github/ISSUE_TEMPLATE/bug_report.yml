@@ -1,0 +1,48 @@
+name: Bug report
+description: Report a reproducible problem in planner, patcher, API, adapters, or docs.
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened, and what did you expect instead?
+      placeholder: The patch engine rewrote the full itinerary when editing one stop.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Include request payloads, instruction text, or code snippet.
+      placeholder: |
+        1. POST /plan with ...
+        2. POST /edit with ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python, Node, OS, and package versions if relevant.
+      placeholder: Windows 11, Python 3.11, Node 20, itinerary-engine main
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - schema
+        - planner
+        - candidate_selector
+        - edit_parser
+        - patcher
+        - evaluator
+        - adapters
+        - api-server
+        - playground
+        - docs
+    validations:
+      required: true

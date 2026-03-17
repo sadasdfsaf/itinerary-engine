@@ -1,0 +1,17 @@
+{
+  "trip_request": {
+    "destination": "tokyo",
+    "days": 3,
+    "travelers": 1,
+    "total_budget": 450,
+    "budget_currency": "USD",
+    "daily_budget_soft_limit": 120,
+    "interests": ["food", "culture", "shopping"],
+    "excluded_categories": [],
+    "pace": "balanced",
+    "mobility": "standard",
+    "with_kids": false,
+    "transport_mode": "mixed",
+    "notes": "First time in the city."
+  }
+}
