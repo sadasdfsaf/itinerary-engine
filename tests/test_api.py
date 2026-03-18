@@ -68,3 +68,21 @@ def test_edit_with_out_of_range_day_returns_conflict() -> None:
     )
 
     assert edit_response.status_code == 409
+
+
+def test_edit_with_mismatched_destination_returns_unprocessable_entity() -> None:
+    plan_response = client.post("/plan", json={"trip_request": _trip_request()})
+    planned = plan_response.json()
+    mismatched_request = _trip_request()
+    mismatched_request["destination"] = "kyoto"
+
+    edit_response = client.post(
+        "/edit",
+        json={
+            "trip_request": mismatched_request,
+            "itinerary": planned["itinerary"],
+            "instruction": "Replace the museum on day 2 with a food market.",
+        },
+    )
+
+    assert edit_response.status_code == 422

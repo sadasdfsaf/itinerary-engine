@@ -64,6 +64,11 @@ def plan(payload: PlanRequest) -> PlanResponse:
 @app.post("/edit", response_model=EditResponse)
 def edit(payload: EditRequest) -> EditResponse:
     try:
+        if payload.trip_request.destination.strip().lower() != payload.itinerary.destination.strip().lower():
+            raise HTTPException(
+                status_code=422,
+                detail="Trip request destination does not match itinerary destination.",
+            )
         intent = parser.parse(payload.instruction)
         itinerary, affected_days = patcher.apply(payload.itinerary, intent, payload.trip_request)
         scores = scorer.score(payload.trip_request, itinerary)
