@@ -40,7 +40,7 @@ class PatchEngine:
         elif intent.action == "move":
             affected_days = self._move(updated, intent)
         elif intent.action == "slow_down":
-            affected_days = self._slow_down(updated)
+            affected_days = self._slow_down(updated, request)
         elif intent.action == "tighten_budget":
             affected_days = self._tighten_budget(updated, request)
         else:
@@ -107,11 +107,13 @@ class PatchEngine:
         )
         return [source_day, target_day]
 
-    def _slow_down(self, itinerary: Itinerary) -> List[int]:
+    def _slow_down(self, itinerary: Itinerary, request: TripRequest) -> List[int]:
         affected = []
+        max_stops = self.planner.max_stops(request)
+        target_count = max_stops if max_stops <= 2 else max_stops - 1
         for day_plan in itinerary.day_plans:
-            if len(day_plan.activities) > 2:
-                day_plan.activities = day_plan.activities[:2]
+            if len(day_plan.activities) > target_count:
+                day_plan.activities = day_plan.activities[:target_count]
                 affected.append(day_plan.day_index)
         return affected
 
@@ -143,8 +145,6 @@ class PatchEngine:
                         )
                         affected.append(day_plan.day_index)
                         break
-        if not affected:
-            raise PatchConflictError("Could not find a cheaper local patch.")
         return affected
 
     def _repair_days(
@@ -162,6 +162,7 @@ class PatchEngine:
             self._reindex_day(day_plan)
 
     def _reindex_day(self, day_plan: DayPlan) -> None:
+        time_by_slot = ["09:00", "13:00", "18:00", "20:00"]
         rebuilt = []
         for index, activity in enumerate(day_plan.activities):
             rebuilt.append(
@@ -172,7 +173,7 @@ class PatchEngine:
                         activity.poi.poi_id,
                     ),
                     poi=activity.poi,
-                    start_time=activity.start_time,
+                    start_time=time_by_slot[index] if index < len(time_by_slot) else None,
                     end_time=activity.end_time,
                     rationale=activity.rationale,
                 )

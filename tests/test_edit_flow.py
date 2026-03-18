@@ -110,6 +110,33 @@ def test_slow_down_no_op_does_not_bump_version() -> None:
     assert updated.model_dump() == itinerary.model_dump()
 
 
+def test_slow_down_for_fast_pace_reduces_by_one_slot_per_day() -> None:
+    request = TripRequest(
+        destination="tokyo",
+        days=2,
+        total_budget=450,
+        interests=["food", "culture", "shopping"],
+        pace="fast",
+    )
+    selector = SimpleCandidateSelector(StaticCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    patcher = PatchEngine(selector, planner)
+
+    itinerary = planner.plan(request)
+    original_counts = [len(day.activities) for day in itinerary.day_plans]
+    assert all(count >= 2 for count in original_counts)
+    target_count = planner.max_stops(request) - 1
+
+    intent = EditIntent(action="slow_down", user_instruction="Make it less packed.")
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    expected_affected = [index + 1 for index, count in enumerate(original_counts) if count > target_count]
+    assert affected_days == expected_affected
+    assert [len(day.activities) for day in updated.day_plans] == [
+        count - 1 if count > target_count else count for count in original_counts
+    ]
+
+
 class ReplacementCatalogAdapter:
     def search(self, destination: str) -> list[POI]:
         return [
