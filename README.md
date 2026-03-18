@@ -5,7 +5,7 @@
 
 `itinerary-engine` is an open-source runtime for generating, editing, patching, and scoring structured travel itineraries. It is designed for builders who need a stable itinerary core behind web apps, mini-programs, internal tools, and APIs.
 
-`itinerary-engine` 是一个开源的结构化旅行行程 runtime，核心能力不是“陪聊”，而是“生成、编辑、局部重排、评分”。它面向开发者，用作 Web、小程序、API、内部系统的底层行程引擎。
+`itinerary-engine` 是一个开源的结构化旅行行程 runtime，核心能力不是“生成、编辑、局部重排、评分”。它面向开发者，用作 Web、小程序、API、内部系统的底层行程引擎。
 
 ## Core Capabilities | 核心能力
 
