@@ -15,6 +15,11 @@ class ItineraryScorer:
     def __init__(self, weights: Optional[Dict[str, float]] = None):
         merged = dict(self.DEFAULT_WEIGHTS)
         if weights:
+            unknown = [key for key in weights if key not in self.DEFAULT_WEIGHTS]
+            if unknown:
+                raise ValueError("Unknown score weights: {0}".format(", ".join(sorted(unknown))))
+            if any(value < 0 for value in weights.values()):
+                raise ValueError("Score weights must be non-negative.")
             merged.update(weights)
         self.weights = merged
 
@@ -29,8 +34,13 @@ class ItineraryScorer:
             + (pacing * self.weights["pacing"])
             + (editability * self.weights["editability"])
         )
-        denominator = sum(self.weights.values()) or 1.0
-        overall = round(numerator / denominator, 2)
+        denominator = (
+            self.weights["budget_fit"]
+            + self.weights["interest_match"]
+            + self.weights["pacing"]
+            + self.weights["editability"]
+        ) or 1.0
+        overall = round(min(1.0, max(0.0, numerator / denominator)), 2)
         return ScoreBreakdown(
             overall=overall,
             budget_fit=budget_fit,
@@ -50,7 +60,7 @@ class ItineraryScorer:
         return lines
 
     def _budget_fit(self, request: TripRequest, itinerary: Itinerary) -> float:
-        if request.total_budget is None or request.total_budget <= 0:
+        if not request.has_budget:
             return 0.8
         estimated = itinerary.budget_summary.estimated_total
         if estimated <= request.total_budget:

@@ -18,6 +18,10 @@ class TripRequest(BaseModel):
     transport_mode: Literal["walk", "transit", "ride", "mixed"] = "mixed"
     notes: Optional[str] = None
 
+    @property
+    def has_budget(self) -> bool:
+        return self.total_budget is not None and self.total_budget > 0
+
 
 class POI(BaseModel):
     poi_id: str

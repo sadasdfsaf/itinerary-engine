@@ -20,7 +20,10 @@ class RuleBasedEditParser:
         re.compile(r"(?:第(?P<day>\d+)天.*)?把(?P<target>.+?)换成(?P<replacement>.+)"),
     )
     _MOVE_PATTERNS = (
-        re.compile(r"move\s+(?P<target>.+?)\s+to\s+day\s*(?P<day>\d+)", re.I),
+        re.compile(
+            r"move\s+(?P<target>.+?)\s+(?:from\s+day\s*(?P<source>\d+)\s+)?to\s+day\s*(?P<day>\d+)",
+            re.I,
+        ),
         re.compile(r"把(?P<target>.+?)移到第(?P<day>\d+)天"),
     )
     _REMOVE_PATTERNS = (
@@ -67,6 +70,11 @@ class RuleBasedEditParser:
                     action="move",
                     user_instruction=text,
                     target_day=int(match.group("day")),
+                    source_day=(
+                        int(match.group("source"))
+                        if match.groupdict().get("source")
+                        else None
+                    ),
                     target_text=self._clean_phrase(match.group("target")),
                     confidence=0.88,
                 )
@@ -108,5 +116,8 @@ class RuleBasedEditParser:
         lowered = cleaned.lower()
         for prefix in ("the ", "a ", "an "):
             if lowered.startswith(prefix):
+                return cleaned[len(prefix):].strip(".,!?;:，。！？；：、 ")
+        for prefix in ("那个", "这个", "那家", "这家"):
+            if cleaned.startswith(prefix):
                 return cleaned[len(prefix):].strip(".,!?;:，。！？；：、 ")
         return cleaned

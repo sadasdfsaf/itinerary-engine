@@ -105,9 +105,7 @@ class BaselinePlanner:
         food_total = round(20 * request.travelers * request.days, 2)
         transport_total = round(10 * request.travelers * request.days, 2)
         estimated_total = round(activities_total + food_total + transport_total, 2)
-        budget_limit = (
-            request.total_budget if request.total_budget not in (None, 0) else estimated_total
-        )
+        budget_limit = request.total_budget if request.has_budget else estimated_total
         return BudgetSummary(
             currency=request.budget_currency,
             estimated_total=estimated_total,

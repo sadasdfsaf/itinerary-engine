@@ -110,6 +110,33 @@ def test_slow_down_no_op_does_not_bump_version() -> None:
     assert updated.model_dump() == itinerary.model_dump()
 
 
+def test_reindex_day_recomputes_start_times_after_remove() -> None:
+    request = TripRequest(
+        destination="tokyo",
+        days=3,
+        total_budget=450,
+        interests=["food", "culture", "shopping"],
+        pace="balanced",
+    )
+    selector = SimpleCandidateSelector(StaticCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    patcher = PatchEngine(selector, planner)
+    itinerary = planner.plan(request)
+    removed_stop = itinerary.day_plans[0].activities[1]
+
+    intent = EditIntent(
+        action="remove",
+        user_instruction="Remove a stop on day 1.",
+        target_day=1,
+        target_text=removed_stop.poi.name,
+    )
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    assert affected_days == [1]
+    day_one_times = [activity.start_time for activity in updated.day_plans[0].activities]
+    assert day_one_times == ["09:00", "13:00"]
+
+
 class ReplacementCatalogAdapter:
     def search(self, destination: str) -> list[POI]:
         return [

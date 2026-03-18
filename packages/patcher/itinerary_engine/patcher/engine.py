@@ -40,7 +40,7 @@ class PatchEngine:
         elif intent.action == "move":
             affected_days = self._move(updated, intent)
         elif intent.action == "slow_down":
-            affected_days = self._slow_down(updated)
+            affected_days = self._slow_down(updated, request)
         elif intent.action == "tighten_budget":
             affected_days = self._tighten_budget(updated, request)
         else:
@@ -107,11 +107,12 @@ class PatchEngine:
         )
         return [source_day, target_day]
 
-    def _slow_down(self, itinerary: Itinerary) -> List[int]:
+    def _slow_down(self, itinerary: Itinerary, request: TripRequest) -> List[int]:
+        target_count = max(2, self.planner.max_stops(request) - 1)
         affected = []
         for day_plan in itinerary.day_plans:
-            if len(day_plan.activities) > 2:
-                day_plan.activities = day_plan.activities[:2]
+            if len(day_plan.activities) > target_count:
+                day_plan.activities = day_plan.activities[:target_count]
                 affected.append(day_plan.day_index)
         return affected
 
@@ -164,6 +165,7 @@ class PatchEngine:
     def _reindex_day(self, day_plan: DayPlan) -> None:
         rebuilt = []
         for index, activity in enumerate(day_plan.activities):
+            refreshed = self.planner.make_stop(day_plan.day_index, index, activity.poi)
             rebuilt.append(
                 PlannedStop(
                     stop_id="d{0}_s{1}_{2}".format(
@@ -172,9 +174,9 @@ class PatchEngine:
                         activity.poi.poi_id,
                     ),
                     poi=activity.poi,
-                    start_time=activity.start_time,
+                    start_time=refreshed.start_time,
                     end_time=activity.end_time,
-                    rationale=activity.rationale,
+                    rationale=activity.rationale or refreshed.rationale,
                 )
             )
         day_plan.activities = rebuilt
