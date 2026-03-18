@@ -68,3 +68,20 @@ def test_edit_with_out_of_range_day_returns_conflict() -> None:
     )
 
     assert edit_response.status_code == 409
+
+
+def test_edit_rejects_mismatched_destination() -> None:
+    plan_response = client.post("/plan", json={"trip_request": _trip_request()})
+    planned = plan_response.json()
+    mismatched_request = {**_trip_request(), "destination": "kyoto"}
+
+    edit_response = client.post(
+        "/edit",
+        json={
+            "trip_request": mismatched_request,
+            "itinerary": planned["itinerary"],
+            "instruction": "Remove museum on day 1",
+        },
+    )
+
+    assert edit_response.status_code == 400
