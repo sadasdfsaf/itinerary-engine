@@ -65,12 +65,20 @@ class PatchEngine:
         stop, day = self._find_stop(itinerary, intent.target_text, intent.target_day)
         if not stop or day is None:
             raise PatchConflictError("Target activity not found for replacement.")
+        global_exclude_ids = self._get_global_ids(itinerary)
         day_plan = itinerary.day_plans[day - 1]
-        replacement = self._resolve_replacement(
-            request,
-            intent.replacement_text,
-            exclude_ids=[activity.poi.poi_id for activity in day_plan.activities],
-        )
+        try:
+            replacement = self._resolve_replacement(
+                request,
+                intent.replacement_text,
+                exclude_ids=global_exclude_ids,
+            )
+        except PatchConflictError:
+            replacement = self._resolve_replacement(
+                request,
+                intent.replacement_text,
+                exclude_ids=[activity.poi.poi_id for activity in day_plan.activities],
+            )
         for index, item in enumerate(day_plan.activities):
             if item.stop_id == stop.stop_id:
                 day_plan.activities[index] = self.planner.make_stop(day, index, replacement)
@@ -81,7 +89,14 @@ class PatchEngine:
         target_day = intent.target_day or 1
         if target_day < 1 or target_day > len(itinerary.day_plans):
             raise PatchConflictError("Target day is out of range.")
-        replacement = self._resolve_replacement(request, intent.replacement_text)
+        try:
+            replacement = self._resolve_replacement(
+                request,
+                intent.replacement_text,
+                exclude_ids=self._get_global_ids(itinerary),
+            )
+        except PatchConflictError:
+            replacement = self._resolve_replacement(request, intent.replacement_text)
         day_plan = itinerary.day_plans[target_day - 1]
         day_plan.activities.append(
             self.planner.make_stop(target_day, len(day_plan.activities), replacement)
@@ -155,10 +170,22 @@ class PatchEngine:
         for day_index in sorted(set(affected_days)):
             day_plan = itinerary.day_plans[day_index - 1]
             if not day_plan.activities:
-                fallback = self.selector.select(request, limit=1)
-                if fallback:
-                    day_plan.activities = [self.planner.make_stop(day_index, 0, fallback[0])]
+                existing_ids = set(self._get_global_ids(itinerary))
+                fallback = self.selector.select(request, limit=max(1, len(existing_ids) + 1))
+                replacement = next(
+                    (poi for poi in fallback if poi.poi_id not in existing_ids),
+                    None,
+                )
+                if replacement:
+                    day_plan.activities = [self.planner.make_stop(day_index, 0, replacement)]
             self._reindex_day(day_plan)
+
+    def _get_global_ids(self, itinerary: Itinerary) -> List[str]:
+        return [
+            activity.poi.poi_id
+            for day_plan in itinerary.day_plans
+            for activity in day_plan.activities
+        ]
 
     def _reindex_day(self, day_plan: DayPlan) -> None:
         rebuilt = []
