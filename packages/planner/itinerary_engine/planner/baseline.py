@@ -1,4 +1,5 @@
 from collections import Counter
+from uuid import uuid4
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from itinerary_engine.candidate_selector.simple import SimpleCandidateSelector
@@ -106,7 +107,7 @@ class BaselinePlanner:
         transport_total = round(10 * request.travelers * request.days, 2)
         estimated_total = round(activities_total + food_total + transport_total, 2)
         budget_limit = (
-            request.total_budget if request.total_budget not in (None, 0) else estimated_total
+            request.total_budget if request.total_budget is not None else estimated_total
         )
         return BudgetSummary(
             currency=request.budget_currency,
@@ -168,7 +169,8 @@ class BaselinePlanner:
 
     def _itinerary_id(self, request: TripRequest) -> str:
         slug = request.destination.strip().lower().replace(" ", "_")
-        return "trip_{0}_{1}d".format(slug, request.days)
+        suffix = uuid4().hex[:8]
+        return "trip_{0}_{1}d_{2}".format(slug, request.days, suffix)
 
     def _day_stop_counts(self, day_count: int, max_stops: int, candidate_count: int) -> List[int]:
         total_slots = min(day_count * max_stops, candidate_count)
