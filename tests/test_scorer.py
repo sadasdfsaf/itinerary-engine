@@ -1,3 +1,4 @@
+import pytest
 from itinerary_engine.evaluator.scorer import ItineraryScorer
 from itinerary_engine.schema.models import BudgetSummary, Itinerary, TripRequest
 
@@ -28,7 +29,7 @@ def test_scorer_accepts_custom_weights() -> None:
     assert balanced.overall != budget_heavy.overall
 
 
-def test_zero_budget_scores_as_unset_budget() -> None:
+def test_zero_budget_scores_as_strict_budget_cap() -> None:
     request = TripRequest(destination="tokyo", days=2, total_budget=0, interests=["food"])
     itinerary = Itinerary(
         itinerary_id="demo",
@@ -50,4 +51,9 @@ def test_zero_budget_scores_as_unset_budget() -> None:
 
     score = ItineraryScorer().score(request, itinerary)
 
-    assert score.budget_fit == 0.8
+    assert score.budget_fit == 0.0
+
+
+def test_scorer_rejects_negative_weights() -> None:
+    with pytest.raises(ValueError, match="non-negative"):
+        ItineraryScorer(weights={"budget_fit": -1.0})
