@@ -36,3 +36,17 @@ def test_fast_pace_penalizes_long_duration_stops() -> None:
 
     assert selector._score(long_stop, slow_request) == selector._score(short_stop, slow_request)
     assert selector._score(long_stop, fast_request) < selector._score(short_stop, fast_request)
+
+
+def test_excluded_categories_are_case_insensitive() -> None:
+    selector = SimpleCandidateSelector(PaceCatalogAdapter())
+    request = TripRequest(
+        destination="pace",
+        days=2,
+        interests=["culture"],
+        excluded_categories=["LANDMARK"],
+    )
+
+    short_stop, _ = PaceCatalogAdapter().search("pace")
+
+    assert selector._score(short_stop, request) == 0

@@ -8,6 +8,38 @@ class EditParseError(ValueError):
 
 
 class RuleBasedEditParser:
+    _REPLACE_PATTERNS = (
+        re.compile(
+            r"replace\s+(?P<target>.+?)\s+on\s+day\s*(?P<day>\d+)\s+with\s+(?P<replacement>.+)",
+            re.I,
+        ),
+        re.compile(
+            r"(?:day\s*(?P<day>\d+).*)?replace\s+(?P<target>.+?)\s+with\s+(?P<replacement>.+)",
+            re.I,
+        ),
+        re.compile(r"(?:第(?P<day>\d+)天.*)?把(?P<target>.+?)换成(?P<replacement>.+)"),
+    )
+    _MOVE_PATTERNS = (
+        re.compile(r"move\s+(?P<target>.+?)\s+to\s+day\s*(?P<day>\d+)", re.I),
+        re.compile(r"把(?P<target>.+?)移到第(?P<day>\d+)天"),
+    )
+    _REMOVE_PATTERNS = (
+        re.compile(
+            r"(?:remove|delete)\s+(?P<target>.+?)(?:\s+on\s+day\s*(?P<day>\d+))?$",
+            re.I,
+        ),
+        re.compile(r"(?:第(?P<day>\d+)天.*)?删除(?P<target>.+)"),
+    )
+    _INSERT_PATTERNS = (
+        re.compile(
+            r"(?:add|insert)\s+(?P<replacement>.+?)(?:\s+on\s+day\s*(?P<day>\d+))?$",
+            re.I,
+        ),
+        re.compile(r"(?:第(?P<day>\d+)天.*)?(?:加上|增加)(?P<replacement>.+)"),
+    )
+    _SLOW_DOWN_KEYWORDS = ("slow down", "less packed", "more relaxed", "轻松", "别太赶")
+    _TIGHTEN_BUDGET_KEYWORDS = ("cheaper", "lower budget", "save money", "省钱", "便宜一点")
+
     def parse(self, instruction: str) -> EditIntent:
         text = instruction.strip()
         if not text:
@@ -15,18 +47,7 @@ class RuleBasedEditParser:
 
         lowered = text.lower()
 
-        replace_patterns = [
-            re.compile(
-                r"replace\s+(?P<target>.+?)\s+on\s+day\s*(?P<day>\d+)\s+with\s+(?P<replacement>.+)",
-                re.I,
-            ),
-            re.compile(
-                r"(?:day\s*(?P<day>\d+).*)?replace\s+(?P<target>.+?)\s+with\s+(?P<replacement>.+)",
-                re.I,
-            ),
-            re.compile(r"(?:第(?P<day>\d+)天.*)?把(?P<target>.+?)换成(?P<replacement>.+)"),
-        ]
-        for pattern in replace_patterns:
+        for pattern in self._REPLACE_PATTERNS:
             match = pattern.search(text)
             if match:
                 day = match.groupdict().get("day")
@@ -39,11 +60,7 @@ class RuleBasedEditParser:
                     confidence=0.91,
                 )
 
-        move_patterns = [
-            re.compile(r"move\s+(?P<target>.+?)\s+to\s+day\s*(?P<day>\d+)", re.I),
-            re.compile(r"把(?P<target>.+?)移到第(?P<day>\d+)天"),
-        ]
-        for pattern in move_patterns:
+        for pattern in self._MOVE_PATTERNS:
             match = pattern.search(text)
             if match:
                 return EditIntent(
@@ -54,14 +71,7 @@ class RuleBasedEditParser:
                     confidence=0.88,
                 )
 
-        remove_patterns = [
-            re.compile(
-                r"(?:remove|delete)\s+(?P<target>.+?)(?:\s+on\s+day\s*(?P<day>\d+))?$",
-                re.I,
-            ),
-            re.compile(r"(?:第(?P<day>\d+)天.*)?删除(?P<target>.+)"),
-        ]
-        for pattern in remove_patterns:
+        for pattern in self._REMOVE_PATTERNS:
             match = pattern.search(text)
             if match:
                 day = match.groupdict().get("day")
@@ -73,14 +83,7 @@ class RuleBasedEditParser:
                     confidence=0.89,
                 )
 
-        insert_patterns = [
-            re.compile(
-                r"(?:add|insert)\s+(?P<replacement>.+?)(?:\s+on\s+day\s*(?P<day>\d+))?$",
-                re.I,
-            ),
-            re.compile(r"(?:第(?P<day>\d+)天.*)?(?:加上|增加)(?P<replacement>.+)"),
-        ]
-        for pattern in insert_patterns:
+        for pattern in self._INSERT_PATTERNS:
             match = pattern.search(text)
             if match:
                 day = match.groupdict().get("day")
@@ -92,16 +95,10 @@ class RuleBasedEditParser:
                     confidence=0.84,
                 )
 
-        if any(
-            keyword in lowered
-            for keyword in ["slow down", "less packed", "more relaxed", "轻松", "别太赶"]
-        ):
+        if any(keyword in lowered for keyword in self._SLOW_DOWN_KEYWORDS):
             return EditIntent(action="slow_down", user_instruction=text, confidence=0.8)
 
-        if any(
-            keyword in lowered
-            for keyword in ["cheaper", "lower budget", "save money", "省钱", "便宜一点"]
-        ):
+        if any(keyword in lowered for keyword in self._TIGHTEN_BUDGET_KEYWORDS):
             return EditIntent(action="tighten_budget", user_instruction=text, confidence=0.8)
 
         raise EditParseError("Instruction does not match a supported edit pattern.")

@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from itinerary_engine.candidate_selector.simple import SimpleCandidateSelector
 from itinerary_engine.schema.models import (
@@ -93,7 +93,7 @@ class BaselinePlanner:
             rationale="Selected for balance between interests, cost, and day density.",
         )
 
-    def estimate_day_cost(self, activities: Iterable[PlannedStop]) -> float:
+    def estimate_day_cost(self, activities: Sequence[PlannedStop]) -> float:
         return round(sum(stop.poi.estimated_cost for stop in activities), 2)
 
     def build_budget_summary(

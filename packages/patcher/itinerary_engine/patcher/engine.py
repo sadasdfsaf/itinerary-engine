@@ -65,12 +65,12 @@ class PatchEngine:
         stop, day = self._find_stop(itinerary, intent.target_text, intent.target_day)
         if not stop or day is None:
             raise PatchConflictError("Target activity not found for replacement.")
+        day_plan = itinerary.day_plans[day - 1]
         replacement = self._resolve_replacement(
             request,
             intent.replacement_text,
-            exclude_ids=[stop.poi.poi_id],
+            exclude_ids=[activity.poi.poi_id for activity in day_plan.activities],
         )
-        day_plan = itinerary.day_plans[day - 1]
         for index, item in enumerate(day_plan.activities):
             if item.stop_id == stop.stop_id:
                 day_plan.activities[index] = self.planner.make_stop(day, index, replacement)
@@ -113,7 +113,7 @@ class PatchEngine:
             if len(day_plan.activities) > 2:
                 day_plan.activities = day_plan.activities[:2]
                 affected.append(day_plan.day_index)
-        return affected or [day.day_index for day in itinerary.day_plans]
+        return affected
 
     def _tighten_budget(self, itinerary: Itinerary, request: TripRequest) -> List[int]:
         affected = []
