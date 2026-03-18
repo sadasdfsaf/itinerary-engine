@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security issue
-    url: https://github.com/OWNER/REPO/security/advisories/new
+    url: https://github.com/sadasdfsaf/itinerary-engine/security/advisories/new
     about: Use private reporting for security vulnerabilities.
   - name: Architecture discussion
-    url: https://github.com/OWNER/REPO/discussions
+    url: https://github.com/sadasdfsaf/itinerary-engine/discussions
     about: Use Discussions for roadmap and design debate.
