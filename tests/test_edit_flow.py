@@ -60,6 +60,35 @@ def test_same_day_move_is_a_no_op() -> None:
     assert [activity.stop_id for activity in updated.day_plans[1].activities] == original_stop_ids
 
 
+def test_move_with_explicit_source_day_in_instruction() -> None:
+    request = TripRequest(
+        destination="tokyo",
+        days=3,
+        total_budget=450,
+        interests=["food", "culture", "shopping"],
+        pace="balanced",
+    )
+    selector = SimpleCandidateSelector(StaticCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    parser = RuleBasedEditParser()
+    patcher = PatchEngine(selector, planner)
+
+    itinerary = planner.plan(request)
+    day_one_target = itinerary.day_plans[0].activities[0].poi.category
+    intent = parser.parse(f"Move {day_one_target} from day 1 to day 2.")
+
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    assert intent.source_day == 1
+    assert affected_days == [1, 2]
+    assert all(
+        activity.poi.category != day_one_target for activity in updated.day_plans[0].activities
+    )
+    assert any(
+        activity.poi.category == day_one_target for activity in updated.day_plans[1].activities
+    )
+
+
 def test_refresh_recomputes_notes_after_replacing_evening_stop() -> None:
     request = TripRequest(
         destination="tokyo",

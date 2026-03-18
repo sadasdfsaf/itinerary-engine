@@ -20,6 +20,10 @@ class RuleBasedEditParser:
         re.compile(r"(?:第(?P<day>\d+)天.*)?把(?P<target>.+?)换成(?P<replacement>.+)"),
     )
     _MOVE_PATTERNS = (
+        re.compile(
+            r"move\s+(?P<target>.+?)\s+from\s+day\s*(?P<source_day>\d+)\s+to\s+day\s*(?P<day>\d+)",
+            re.I,
+        ),
         re.compile(r"move\s+(?P<target>.+?)\s+to\s+day\s*(?P<day>\d+)", re.I),
         re.compile(r"把(?P<target>.+?)移到第(?P<day>\d+)天"),
     )
@@ -63,10 +67,12 @@ class RuleBasedEditParser:
         for pattern in self._MOVE_PATTERNS:
             match = pattern.search(text)
             if match:
+                source_day = match.groupdict().get("source_day")
                 return EditIntent(
                     action="move",
                     user_instruction=text,
                     target_day=int(match.group("day")),
+                    source_day=int(source_day) if source_day else None,
                     target_text=self._clean_phrase(match.group("target")),
                     confidence=0.88,
                 )
