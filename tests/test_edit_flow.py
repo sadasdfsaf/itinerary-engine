@@ -245,3 +245,156 @@ def test_tighten_budget_returns_noop_when_no_cheaper_options() -> None:
     assert affected_days == []
     assert updated.version == itinerary.version
     assert updated.model_dump() == itinerary.model_dump()
+
+
+class CrossDayDupCatalogAdapter:
+    def search(self, destination: str) -> list[POI]:
+        return [
+            POI(
+                poi_id="tower_hot",
+                name="Famous Tower",
+                city="Dup City",
+                category="landmark",
+                tags=["tower", "view"],
+                estimated_cost=20,
+            ),
+            POI(
+                poi_id="museum_one",
+                name="City Museum",
+                city="Dup City",
+                category="museum",
+                tags=["culture"],
+                estimated_cost=12,
+            ),
+            POI(
+                poi_id="park_one",
+                name="Central Park",
+                city="Dup City",
+                category="park",
+                tags=["nature"],
+                estimated_cost=0,
+            ),
+            POI(
+                poi_id="tower_alt",
+                name="Riverside Tower",
+                city="Dup City",
+                category="landmark",
+                tags=["tower"],
+                estimated_cost=18,
+            ),
+            POI(
+                poi_id="shop_one",
+                name="Arcade Street",
+                city="Dup City",
+                category="shopping",
+                tags=["shopping"],
+                estimated_cost=12,
+            ),
+            POI(
+                poi_id="food_one",
+                name="Food Street",
+                city="Dup City",
+                category="food",
+                tags=["food"],
+                estimated_cost=15,
+            ),
+            POI(
+                poi_id="tower_new",
+                name="Skyline Tower",
+                city="Dup City",
+                category="landmark",
+                tags=["tower", "view"],
+                estimated_cost=22,
+            ),
+        ]
+
+
+def test_insert_avoids_cross_day_duplicate_poi() -> None:
+    request = TripRequest(destination="dup", days=2, interests=["culture"], pace="slow")
+    selector = SimpleCandidateSelector(CrossDayDupCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    patcher = PatchEngine(selector, planner)
+    itinerary = planner.plan(request)
+
+    first_day_ids = [activity.poi.poi_id for activity in itinerary.day_plans[0].activities]
+    second_day_ids = [activity.poi.poi_id for activity in itinerary.day_plans[1].activities]
+    assert first_day_ids == ["museum_one", "tower_hot"]
+    assert second_day_ids == ["park_one", "tower_alt"]
+
+    intent = EditIntent(
+        action="insert",
+        user_instruction="Add a tower on day 2.",
+        target_day=2,
+        replacement_text="tower",
+    )
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    updated_day_two_ids = [activity.poi.poi_id for activity in updated.day_plans[1].activities]
+    assert affected_days == [2]
+    assert updated_day_two_ids[-1] == "tower_new"
+    assert updated_day_two_ids.count("tower_new") == 1
+
+
+class RepairFallbackCatalogAdapter:
+    def search(self, destination: str) -> list[POI]:
+        return [
+            POI(
+                poi_id="top_hit",
+                name="Top Hit",
+                city="Repair City",
+                category="museum",
+                tags=["culture"],
+                estimated_cost=10,
+            ),
+            POI(
+                poi_id="second_hit",
+                name="Second Hit",
+                city="Repair City",
+                category="landmark",
+                tags=["view"],
+                estimated_cost=8,
+            ),
+            POI(
+                poi_id="third_hit",
+                name="Third Hit",
+                city="Repair City",
+                category="park",
+                tags=["nature"],
+                estimated_cost=0,
+            ),
+            POI(
+                poi_id="repair_fallback",
+                name="Repair Fallback",
+                city="Repair City",
+                category="food",
+                tags=["food"],
+                estimated_cost=6,
+            ),
+        ]
+
+
+def test_repair_days_fallback_skips_existing_global_pois() -> None:
+    request = TripRequest(destination="repair", days=2, interests=[], pace="balanced")
+    selector = SimpleCandidateSelector(RepairFallbackCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    patcher = PatchEngine(selector, planner)
+    itinerary = planner.plan(request)
+    itinerary.day_plans[1].activities = [itinerary.day_plans[0].activities[0]]
+
+    day_one_ids = [activity.poi.poi_id for activity in itinerary.day_plans[0].activities]
+    day_two_ids = [activity.poi.poi_id for activity in itinerary.day_plans[1].activities]
+    assert day_one_ids == ["top_hit", "second_hit"]
+    assert day_two_ids == ["top_hit"]
+
+    intent = EditIntent(
+        action="remove",
+        user_instruction="Remove top hit from day 2.",
+        target_day=2,
+        target_text="top hit",
+    )
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    updated_day_two_ids = [activity.poi.poi_id for activity in updated.day_plans[1].activities]
+    assert affected_days == [2]
+    assert "top_hit" not in updated_day_two_ids
+    assert updated_day_two_ids
