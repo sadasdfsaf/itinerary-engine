@@ -22,10 +22,10 @@
 {
   "itinerary": {},
   "scores": {
-    "overall": 1.0,
+    "overall": 0.95,
     "budget_fit": 1.0,
     "interest_match": 1.0,
-    "pacing": 1.0,
+    "pacing": 0.8,
     "editability": 1.0
   },
   "trace": {
@@ -52,8 +52,8 @@
     "day_plans": [],
     "budget_summary": {
       "currency": "USD",
-      "estimated_total": 242.0,
-      "activities_total": 152.0,
+      "estimated_total": 210.0,
+      "activities_total": 120.0,
       "food_total": 60.0,
       "transport_total": 30.0,
       "buffer_total": 0.0,
@@ -63,10 +63,10 @@
     "version": 1
   },
   "scores": {
-    "overall": 1.0,
+    "overall": 0.95,
     "budget_fit": 1.0,
     "interest_match": 1.0,
-    "pacing": 1.0,
+    "pacing": 0.8,
     "editability": 1.0
   },
   "trace": {
@@ -130,10 +130,10 @@
   },
   "affected_days": [2],
   "scores": {
-    "overall": 1.0,
+    "overall": 0.95,
     "budget_fit": 1.0,
     "interest_match": 1.0,
-    "pacing": 1.0,
+    "pacing": 0.8,
     "editability": 1.0
   }
 }
@@ -166,16 +166,16 @@
 ```json
 {
   "scores": {
-    "overall": 1.0,
+    "overall": 0.95,
     "budget_fit": 1.0,
     "interest_match": 1.0,
-    "pacing": 1.0,
+    "pacing": 0.8,
     "editability": 1.0
   },
   "summary": [
     "Budget fit is 100%.",
     "Interest match is 100%.",
-    "Pacing score is 100%.",
+    "Pacing score is 80%.",
     "Itinerary structure is patch-friendly."
   ]
 }

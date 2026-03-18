@@ -32,13 +32,26 @@ class BaselinePlanner:
             raise ValueError("No candidates available for destination.")
 
         day_plans: List[DayPlan] = []
+        day_stop_counts = self._day_stop_counts(
+            day_count=request.days,
+            max_stops=max_stops,
+            candidate_count=len(candidates),
+        )
         cursor = 0
-        for day_index in range(1, request.days + 1):
+        for day_index, stop_count in enumerate(day_stop_counts, start=1):
             activities: List[PlannedStop] = []
-            for slot_index in range(max_stops):
-                poi = candidates[cursor % len(candidates)]
+            for slot_index in range(stop_count):
+                if cursor < len(candidates):
+                    poi = candidates[cursor]
+                else:
+                    poi = candidates[cursor % len(candidates)]
                 cursor += 1
                 activities.append(self.make_stop(day_index, slot_index, poi))
+            day_notes = self._notes_for_day(request, activities)
+            if stop_count < max_stops:
+                day_notes.append(
+                    "Planner reduced stop count to avoid repeating the same POIs too early."
+                )
             day_plans.append(
                 DayPlan(
                     day_index=day_index,
@@ -46,10 +59,11 @@ class BaselinePlanner:
                     area_cluster=self._area_for(activities),
                     activities=activities,
                     estimated_cost=self.estimate_day_cost(activities),
-                    notes=self._notes_for_day(request, activities),
+                    notes=day_notes,
                 )
             )
 
+        budget_summary = self.build_budget_summary(day_plans, request)
         itinerary = Itinerary(
             itinerary_id=self._itinerary_id(request),
             destination=request.destination,
@@ -61,11 +75,10 @@ class BaselinePlanner:
                 "Food and transport estimates are coarse",
             ],
             day_plans=day_plans,
-            budget_summary=BudgetSummary(),
+            budget_summary=budget_summary,
             tags=self._itinerary_tags(request),
             version=1,
         )
-        itinerary.budget_summary = self.build_budget_summary(itinerary, request)
         return itinerary, {"planner": "baseline", "candidate_count": len(candidates)}
 
     def max_stops(self, request: TripRequest) -> int:
@@ -88,8 +101,12 @@ class BaselinePlanner:
     def estimate_day_cost(self, activities: Iterable[PlannedStop]) -> float:
         return round(sum(stop.poi.estimated_cost for stop in activities), 2)
 
-    def build_budget_summary(self, itinerary: Itinerary, request: TripRequest) -> BudgetSummary:
-        activities_total = round(sum(day.estimated_cost for day in itinerary.day_plans), 2)
+    def build_budget_summary(
+        self,
+        day_plans: Sequence[DayPlan],
+        request: TripRequest,
+    ) -> BudgetSummary:
+        activities_total = round(sum(day.estimated_cost for day in day_plans), 2)
         food_total = round(20 * request.travelers * request.days, 2)
         transport_total = round(10 * request.travelers * request.days, 2)
         estimated_total = round(activities_total + food_total + transport_total, 2)
@@ -122,7 +139,7 @@ class BaselinePlanner:
                 day_plan.notes = self._notes_for_day(request, day_plan.activities)
         itinerary.summary = self.summarize_request(request)
         itinerary.tags = self._itinerary_tags(request)
-        itinerary.budget_summary = self.build_budget_summary(itinerary, request)
+        itinerary.budget_summary = self.build_budget_summary(itinerary.day_plans, request)
         return itinerary
 
     def _theme_for(self, activities: Sequence[PlannedStop]) -> str:
@@ -154,3 +171,12 @@ class BaselinePlanner:
     def _itinerary_id(self, request: TripRequest) -> str:
         slug = request.destination.strip().lower().replace(" ", "_")
         return "trip_{0}_{1}d".format(slug, request.days)
+
+    def _day_stop_counts(self, day_count: int, max_stops: int, candidate_count: int) -> List[int]:
+        total_slots = min(day_count * max_stops, candidate_count)
+        total_slots = max(day_count, total_slots)
+        base, remainder = divmod(total_slots, day_count)
+        counts = []
+        for day_index in range(day_count):
+            counts.append(base + (1 if day_index < remainder else 0))
+        return counts

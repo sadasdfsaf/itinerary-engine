@@ -1,16 +1,36 @@
-from typing import Iterable, List
+from typing import Dict, Iterable, List, Optional
 
 from itinerary_engine.schema.api import ScoreBreakdown
 from itinerary_engine.schema.models import Itinerary, PlannedStop, TripRequest
 
 
 class ItineraryScorer:
+    DEFAULT_WEIGHTS = {
+        "budget_fit": 1.0,
+        "interest_match": 1.0,
+        "pacing": 1.0,
+        "editability": 1.0,
+    }
+
+    def __init__(self, weights: Optional[Dict[str, float]] = None):
+        merged = dict(self.DEFAULT_WEIGHTS)
+        if weights:
+            merged.update(weights)
+        self.weights = merged
+
     def score(self, request: TripRequest, itinerary: Itinerary) -> ScoreBreakdown:
         budget_fit = self._budget_fit(request, itinerary)
         interest_match = self._interest_match(request, itinerary)
         pacing = self._pacing(request, itinerary)
         editability = self._editability(itinerary)
-        overall = round((budget_fit + interest_match + pacing + editability) / 4, 2)
+        numerator = (
+            (budget_fit * self.weights["budget_fit"])
+            + (interest_match * self.weights["interest_match"])
+            + (pacing * self.weights["pacing"])
+            + (editability * self.weights["editability"])
+        )
+        denominator = sum(self.weights.values()) or 1.0
+        overall = round(numerator / denominator, 2)
         return ScoreBreakdown(
             overall=overall,
             budget_fit=budget_fit,

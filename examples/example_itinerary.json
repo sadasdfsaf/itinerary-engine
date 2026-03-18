@@ -23,7 +23,7 @@
             "category": "landmark",
             "district": "Asakusa",
             "tags": ["culture", "historic", "photography"],
-            "estimated_cost": 8,
+            "estimated_cost": 8.0,
             "visit_duration_hours": 1.5,
             "best_time": "morning",
             "indoor": false,
@@ -43,8 +43,8 @@
             "category": "food",
             "district": "Tsukiji",
             "tags": ["food", "market", "street-food"],
-            "estimated_cost": 24,
-            "visit_duration_hours": 2,
+            "estimated_cost": 24.0,
+            "visit_duration_hours": 2.0,
             "best_time": "morning",
             "indoor": false,
             "family_friendly": true,
@@ -63,7 +63,7 @@
             "category": "park",
             "district": "Ueno",
             "tags": ["nature", "culture", "walk"],
-            "estimated_cost": 0,
+            "estimated_cost": 0.0,
             "visit_duration_hours": 1.5,
             "best_time": "afternoon",
             "indoor": false,
@@ -75,7 +75,7 @@
           "rationale": "Selected for balance between interests, cost, and day density."
         }
       ],
-      "estimated_cost": 32,
+      "estimated_cost": 32.0,
       "notes": []
     },
     {
@@ -92,8 +92,8 @@
             "category": "shopping",
             "district": "Harajuku",
             "tags": ["shopping", "street", "youth-culture"],
-            "estimated_cost": 30,
-            "visit_duration_hours": 2,
+            "estimated_cost": 30.0,
+            "visit_duration_hours": 2.0,
             "best_time": "afternoon",
             "indoor": false,
             "family_friendly": true,
@@ -112,8 +112,8 @@
             "category": "museum",
             "district": "Ueno",
             "tags": ["culture", "museum", "history"],
-            "estimated_cost": 12,
-            "visit_duration_hours": 2,
+            "estimated_cost": 12.0,
+            "visit_duration_hours": 2.0,
             "best_time": "afternoon",
             "indoor": true,
             "family_friendly": true,
@@ -122,9 +122,20 @@
           "start_time": "13:00",
           "end_time": null,
           "rationale": "Selected for balance between interests, cost, and day density."
-        },
+        }
+      ],
+      "estimated_cost": 42.0,
+      "notes": [
+        "Planner reduced stop count to avoid repeating the same POIs too early."
+      ]
+    },
+    {
+      "day_index": 3,
+      "theme": "art-led day",
+      "area_cluster": "Toyosu",
+      "activities": [
         {
-          "stop_id": "d2_s3_tokyo_teamlab",
+          "stop_id": "d3_s1_tokyo_teamlab",
           "poi": {
             "poi_id": "tokyo_teamlab",
             "name": "teamLab Planets",
@@ -132,28 +143,19 @@
             "category": "activity",
             "district": "Toyosu",
             "tags": ["art", "immersive", "indoor"],
-            "estimated_cost": 28,
-            "visit_duration_hours": 2,
+            "estimated_cost": 28.0,
+            "visit_duration_hours": 2.0,
             "best_time": "afternoon",
             "indoor": true,
             "family_friendly": true,
             "summary": "Immersive digital art experience."
           },
-          "start_time": "18:00",
+          "start_time": "09:00",
           "end_time": null,
           "rationale": "Selected for balance between interests, cost, and day density."
-        }
-      ],
-      "estimated_cost": 70,
-      "notes": []
-    },
-    {
-      "day_index": 3,
-      "theme": "photography-led day",
-      "area_cluster": "Shibuya",
-      "activities": [
+        },
         {
-          "stop_id": "d3_s1_tokyo_shibuya_sky",
+          "stop_id": "d3_s2_tokyo_shibuya_sky",
           "poi": {
             "poi_id": "tokyo_shibuya_sky",
             "name": "Shibuya Sky",
@@ -161,69 +163,32 @@
             "category": "landmark",
             "district": "Shibuya",
             "tags": ["view", "photography", "city"],
-            "estimated_cost": 18,
-            "visit_duration_hours": 1,
+            "estimated_cost": 18.0,
+            "visit_duration_hours": 1.0,
             "best_time": "evening",
             "indoor": false,
             "family_friendly": true,
             "summary": "Observation deck with strong sunset potential."
           },
-          "start_time": "09:00",
-          "end_time": null,
-          "rationale": "Selected for balance between interests, cost, and day density."
-        },
-        {
-          "stop_id": "d3_s2_tokyo_sensoji",
-          "poi": {
-            "poi_id": "tokyo_sensoji",
-            "name": "Senso-ji",
-            "city": "Tokyo",
-            "category": "landmark",
-            "district": "Asakusa",
-            "tags": ["culture", "historic", "photography"],
-            "estimated_cost": 8,
-            "visit_duration_hours": 1.5,
-            "best_time": "morning",
-            "indoor": false,
-            "family_friendly": true,
-            "summary": "Historic temple area with strong first-visit appeal."
-          },
           "start_time": "13:00",
-          "end_time": null,
-          "rationale": "Selected for balance between interests, cost, and day density."
-        },
-        {
-          "stop_id": "d3_s3_tokyo_tsukiji",
-          "poi": {
-            "poi_id": "tokyo_tsukiji",
-            "name": "Tsukiji Outer Market",
-            "city": "Tokyo",
-            "category": "food",
-            "district": "Tsukiji",
-            "tags": ["food", "market", "street-food"],
-            "estimated_cost": 24,
-            "visit_duration_hours": 2,
-            "best_time": "morning",
-            "indoor": false,
-            "family_friendly": true,
-            "summary": "High-density food stop with strong breakfast value."
-          },
-          "start_time": "18:00",
           "end_time": null,
           "rationale": "Selected for balance between interests, cost, and day density."
         }
       ],
-      "estimated_cost": 50,
-      "notes": ["Reserve evening energy for the final stop."]
+      "estimated_cost": 46.0,
+      "notes": [
+        "Reserve evening energy for the final stop.",
+        "Planner reduced stop count to avoid repeating the same POIs too early."
+      ]
     }
   ],
   "budget_summary": {
     "currency": "USD",
-    "estimated_total": 242,
-    "activities_total": 152,
-    "food_total": 60,
-    "transport_total": 30,
-    "buffer_total": 0,
+    "estimated_total": 210.0,
+    "activities_total": 120.0,
+    "food_total": 60.0,
+    "transport_total": 30.0,
+    "buffer_total": 0.0,
     "within_budget": true
   },
   "tags": ["balanced", "editable"],
