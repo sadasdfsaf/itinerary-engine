@@ -15,7 +15,14 @@ class ItineraryScorer:
     def __init__(self, weights: Optional[Dict[str, float]] = None):
         merged = dict(self.DEFAULT_WEIGHTS)
         if weights:
+            unknown = [key for key in weights if key not in self.DEFAULT_WEIGHTS]
+            if unknown:
+                raise ValueError("Unknown scorer weights: {0}".format(", ".join(sorted(unknown))))
+            if any(value < 0 for value in weights.values()):
+                raise ValueError("Scorer weights must be non-negative.")
             merged.update(weights)
+        if sum(merged.values()) <= 0:
+            raise ValueError("At least one scorer weight must be positive.")
         self.weights = merged
 
     def score(self, request: TripRequest, itinerary: Itinerary) -> ScoreBreakdown:
@@ -31,6 +38,7 @@ class ItineraryScorer:
         )
         denominator = sum(self.weights.values()) or 1.0
         overall = round(numerator / denominator, 2)
+        overall = round(min(1.0, max(0.0, overall)), 2)
         return ScoreBreakdown(
             overall=overall,
             budget_fit=budget_fit,
@@ -50,8 +58,10 @@ class ItineraryScorer:
         return lines
 
     def _budget_fit(self, request: TripRequest, itinerary: Itinerary) -> float:
-        if request.total_budget is None or request.total_budget <= 0:
+        if request.total_budget is None:
             return 0.8
+        if request.total_budget == 0:
+            return 1.0 if itinerary.budget_summary.estimated_total <= 0 else 0.0
         estimated = itinerary.budget_summary.estimated_total
         if estimated <= request.total_budget:
             return 1.0
@@ -84,7 +94,8 @@ class ItineraryScorer:
         if not activities:
             return 0.0
         stable_ids = all(bool(activity.stop_id) for activity in activities)
-        evenly_split = all(1 <= len(day.activities) <= 4 for day in itinerary.day_plans)
+        day_sizes = [len(day.activities) for day in itinerary.day_plans]
+        evenly_split = bool(day_sizes) and min(day_sizes) >= 1 and (max(day_sizes) - min(day_sizes) <= 1)
         score = 0.5
         if stable_ids:
             score += 0.3

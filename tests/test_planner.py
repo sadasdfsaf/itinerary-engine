@@ -79,7 +79,7 @@ def test_baseline_planner_keeps_each_day_non_empty_even_with_small_catalog() -> 
     assert all(day.activities for day in itinerary.day_plans)
 
 
-def test_zero_budget_is_treated_as_unset_consistently() -> None:
+def test_zero_budget_is_treated_as_strict_budget_cap() -> None:
     request = TripRequest(
         destination="tokyo",
         days=3,
@@ -91,4 +91,14 @@ def test_zero_budget_is_treated_as_unset_consistently() -> None:
     planner = BaselinePlanner(SimpleCandidateSelector(StaticCatalogAdapter()))
     itinerary = planner.plan(request)
 
-    assert itinerary.budget_summary.within_budget is True
+    assert itinerary.budget_summary.within_budget is False
+
+
+def test_itinerary_id_is_unique_per_plan() -> None:
+    request = TripRequest(destination="tokyo", days=2, pace="balanced")
+    planner = BaselinePlanner(SimpleCandidateSelector(StaticCatalogAdapter()))
+
+    first = planner.plan(request)
+    second = planner.plan(request)
+
+    assert first.itinerary_id != second.itinerary_id
