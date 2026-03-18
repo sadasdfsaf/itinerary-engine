@@ -1,5 +1,6 @@
 from collections import Counter
 from typing import Dict, List, Optional, Sequence, Tuple, Union
+from uuid import uuid4
 
 from itinerary_engine.candidate_selector.simple import SimpleCandidateSelector
 from itinerary_engine.schema.models import (
@@ -41,10 +42,7 @@ class BaselinePlanner:
         for day_index, stop_count in enumerate(day_stop_counts, start=1):
             activities: List[PlannedStop] = []
             for slot_index in range(stop_count):
-                if cursor < len(candidates):
-                    poi = candidates[cursor]
-                else:
-                    poi = candidates[cursor % len(candidates)]
+                poi = candidates[cursor]
                 cursor += 1
                 activities.append(self.make_stop(day_index, slot_index, poi))
             day_plans.append(
@@ -166,11 +164,10 @@ class BaselinePlanner:
 
     def _itinerary_id(self, request: TripRequest) -> str:
         slug = request.destination.strip().lower().replace(" ", "_")
-        return "trip_{0}_{1}d".format(slug, request.days)
+        return "trip_{0}_{1}d_{2}".format(slug, request.days, uuid4().hex[:8])
 
     def _day_stop_counts(self, day_count: int, max_stops: int, candidate_count: int) -> List[int]:
         total_slots = min(day_count * max_stops, candidate_count)
-        total_slots = max(day_count, total_slots)
         base, remainder = divmod(total_slots, day_count)
         counts = []
         for day_index in range(day_count):

@@ -86,3 +86,13 @@ def test_edit_with_mismatched_destination_returns_unprocessable_entity() -> None
     )
 
     assert edit_response.status_code == 422
+
+
+def test_cors_default_origins_are_restricted() -> None:
+    cors_middleware = next(
+        middleware for middleware in app.user_middleware if middleware.cls.__name__ == "CORSMiddleware"
+    )
+    assert cors_middleware.kwargs["allow_origins"] == [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]

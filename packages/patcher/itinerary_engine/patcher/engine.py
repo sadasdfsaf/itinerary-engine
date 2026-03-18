@@ -144,8 +144,6 @@ class PatchEngine:
                         )
                         affected.append(day_plan.day_index)
                         break
-        if not affected:
-            raise PatchConflictError("Could not find a cheaper local patch.")
         return affected
 
     def _repair_days(

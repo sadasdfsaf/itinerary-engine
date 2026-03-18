@@ -200,3 +200,48 @@ def test_replace_skips_same_day_existing_pois() -> None:
     assert affected_days == [1]
     assert updated_ids == ["food_existing", "food_new", "park_existing"]
     assert len(updated_ids) == len(set(updated_ids))
+
+
+class BudgetFloorCatalogAdapter:
+    def search(self, destination: str) -> list[POI]:
+        return [
+            POI(
+                poi_id="cheap_landmark",
+                name="Cheap Landmark",
+                city="Budget City",
+                category="landmark",
+                estimated_cost=1,
+                tags=["culture"],
+            ),
+            POI(
+                poi_id="cheap_food",
+                name="Cheap Food Spot",
+                city="Budget City",
+                category="food",
+                estimated_cost=1,
+                tags=["food"],
+            ),
+            POI(
+                poi_id="cheap_park",
+                name="Cheap Park",
+                city="Budget City",
+                category="park",
+                estimated_cost=0,
+                tags=["nature"],
+            ),
+        ]
+
+
+def test_tighten_budget_returns_noop_when_no_cheaper_options() -> None:
+    request = TripRequest(destination="budget", days=1, interests=["food"], pace="balanced")
+    selector = SimpleCandidateSelector(BudgetFloorCatalogAdapter())
+    planner = BaselinePlanner(selector)
+    patcher = PatchEngine(selector, planner)
+    itinerary = planner.plan(request)
+
+    intent = EditIntent(action="tighten_budget", user_instruction="Tighten budget.")
+    updated, affected_days = patcher.apply(itinerary, intent, request)
+
+    assert affected_days == []
+    assert updated.version == itinerary.version
+    assert updated.model_dump() == itinerary.model_dump()

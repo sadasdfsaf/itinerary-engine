@@ -4,6 +4,8 @@ from app.bootstrap import bootstrap_workspace
 
 bootstrap_workspace()
 
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from itinerary_engine.adapters.catalog import StaticCatalogAdapter
@@ -27,9 +29,18 @@ app = FastAPI(
     description="Developer-first runtime for structured itinerary planning, editing, and scoring.",
 )
 
+allow_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "ITINERARY_CORS_ALLOW_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000",
+    ).split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
