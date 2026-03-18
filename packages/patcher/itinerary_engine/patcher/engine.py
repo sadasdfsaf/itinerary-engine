@@ -46,6 +46,8 @@ class PatchEngine:
         else:
             raise PatchConflictError("Unsupported edit action.")
 
+        if not affected_days:
+            return updated, []
         self._repair_days(updated, request, affected_days)
         updated.version += 1
         self.planner.refresh(updated, request)
@@ -93,6 +95,8 @@ class PatchEngine:
         target_day = intent.target_day
         if target_day is None or target_day < 1 or target_day > len(itinerary.day_plans):
             raise PatchConflictError("Target day is out of range.")
+        if source_day == target_day:
+            return []
         source_plan = itinerary.day_plans[source_day - 1]
         target_plan = itinerary.day_plans[target_day - 1]
         source_plan.activities = [

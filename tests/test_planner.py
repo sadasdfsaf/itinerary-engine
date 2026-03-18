@@ -77,3 +77,18 @@ def test_baseline_planner_keeps_each_day_non_empty_even_with_small_catalog() -> 
 
     assert len(itinerary.day_plans) == 3
     assert all(day.activities for day in itinerary.day_plans)
+
+
+def test_zero_budget_is_treated_as_unset_consistently() -> None:
+    request = TripRequest(
+        destination="tokyo",
+        days=3,
+        total_budget=0,
+        interests=["food", "culture", "shopping"],
+        pace="balanced",
+    )
+
+    planner = BaselinePlanner(SimpleCandidateSelector(StaticCatalogAdapter()))
+    itinerary = planner.plan(request)
+
+    assert itinerary.budget_summary.within_budget is True

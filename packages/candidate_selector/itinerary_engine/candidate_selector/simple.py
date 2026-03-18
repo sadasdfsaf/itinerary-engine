@@ -36,7 +36,7 @@ class SimpleCandidateSelector:
         exclusion_penalty = 3 if poi.category in request.excluded_categories else 0
         family_bonus = 1 if request.with_kids and poi.family_friendly else 0
         indoor_bonus = 0.5 if request.mobility == "low" and poi.indoor else 0
-        pace_penalty = 1 if request.pace == "slow" and poi.visit_duration_hours > 2.0 else 0
+        pace_penalty = 1 if request.pace == "fast" and poi.visit_duration_hours > 2.0 else 0
         cost_penalty = 0
         if request.daily_budget_soft_limit and poi.estimated_cost > request.daily_budget_soft_limit:
             cost_penalty = 2

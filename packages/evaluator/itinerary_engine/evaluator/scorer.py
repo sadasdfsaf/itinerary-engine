@@ -50,7 +50,7 @@ class ItineraryScorer:
         return lines
 
     def _budget_fit(self, request: TripRequest, itinerary: Itinerary) -> float:
-        if request.total_budget is None or request.total_budget == 0:
+        if request.total_budget is None or request.total_budget <= 0:
             return 0.8
         estimated = itinerary.budget_summary.estimated_total
         if estimated <= request.total_budget:

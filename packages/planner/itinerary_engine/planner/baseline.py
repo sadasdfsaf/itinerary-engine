@@ -47,11 +47,6 @@ class BaselinePlanner:
                     poi = candidates[cursor % len(candidates)]
                 cursor += 1
                 activities.append(self.make_stop(day_index, slot_index, poi))
-            day_notes = self._notes_for_day(request, activities)
-            if stop_count < max_stops:
-                day_notes.append(
-                    "Planner reduced stop count to avoid repeating the same POIs too early."
-                )
             day_plans.append(
                 DayPlan(
                     day_index=day_index,
@@ -59,7 +54,7 @@ class BaselinePlanner:
                     area_cluster=self._area_for(activities),
                     activities=activities,
                     estimated_cost=self.estimate_day_cost(activities),
-                    notes=day_notes,
+                    notes=self._notes_for_day(request, activities),
                 )
             )
 
@@ -110,7 +105,9 @@ class BaselinePlanner:
         food_total = round(20 * request.travelers * request.days, 2)
         transport_total = round(10 * request.travelers * request.days, 2)
         estimated_total = round(activities_total + food_total + transport_total, 2)
-        budget_limit = request.total_budget if request.total_budget is not None else estimated_total
+        budget_limit = (
+            request.total_budget if request.total_budget not in (None, 0) else estimated_total
+        )
         return BudgetSummary(
             currency=request.budget_currency,
             estimated_total=estimated_total,
@@ -135,8 +132,7 @@ class BaselinePlanner:
             day_plan.theme = self._theme_for(day_plan.activities)
             day_plan.area_cluster = self._area_for(day_plan.activities)
             day_plan.estimated_cost = self.estimate_day_cost(day_plan.activities)
-            if not day_plan.notes:
-                day_plan.notes = self._notes_for_day(request, day_plan.activities)
+            day_plan.notes = self._notes_for_day(request, day_plan.activities)
         itinerary.summary = self.summarize_request(request)
         itinerary.tags = self._itinerary_tags(request)
         itinerary.budget_summary = self.build_budget_summary(itinerary.day_plans, request)
@@ -160,6 +156,8 @@ class BaselinePlanner:
             notes.append("Keep transitions loose and leave room for rest.")
         if any(activity.poi.best_time == "evening" for activity in activities):
             notes.append("Reserve evening energy for the final stop.")
+        if activities and len(activities) < self.max_stops(request):
+            notes.append("Planner reduced stop count to avoid repeating the same POIs too early.")
         return notes
 
     def _itinerary_tags(self, request: TripRequest) -> List[str]:
