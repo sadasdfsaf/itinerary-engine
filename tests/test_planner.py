@@ -64,7 +64,7 @@ class TinyCatalogAdapter:
         ]
 
 
-def test_baseline_planner_keeps_each_day_non_empty_even_with_small_catalog() -> None:
+def test_baseline_planner_does_not_repeat_pois_with_small_catalog() -> None:
     request = TripRequest(
         destination="tiny",
         days=3,
@@ -76,7 +76,10 @@ def test_baseline_planner_keeps_each_day_non_empty_even_with_small_catalog() -> 
     itinerary = planner.plan(request)
 
     assert len(itinerary.day_plans) == 3
-    assert all(day.activities for day in itinerary.day_plans)
+    poi_ids = [activity.poi.poi_id for day in itinerary.day_plans for activity in day.activities]
+    assert len(poi_ids) == 2
+    assert len(poi_ids) == len(set(poi_ids))
+    assert any(not day.activities for day in itinerary.day_plans)
 
 
 def test_zero_budget_is_treated_as_unset_consistently() -> None:
@@ -92,3 +95,18 @@ def test_zero_budget_is_treated_as_unset_consistently() -> None:
     itinerary = planner.plan(request)
 
     assert itinerary.budget_summary.within_budget is True
+
+
+def test_itinerary_ids_are_unique_per_generation() -> None:
+    request = TripRequest(
+        destination="tokyo",
+        days=2,
+        interests=["food"],
+        pace="balanced",
+    )
+
+    planner = BaselinePlanner(SimpleCandidateSelector(StaticCatalogAdapter()))
+    first = planner.plan(request)
+    second = planner.plan(request)
+
+    assert first.itinerary_id != second.itinerary_id

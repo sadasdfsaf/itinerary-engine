@@ -27,7 +27,7 @@ class ItineraryScorer:
         budget_fit = self._budget_fit(request, itinerary)
         interest_match = self._interest_match(request, itinerary)
         pacing = self._pacing(request, itinerary)
-        editability = self._editability(itinerary)
+        editability = self._editability(request, itinerary)
         numerator = (
             (budget_fit * self.weights["budget_fit"])
             + (interest_match * self.weights["interest_match"])
@@ -89,12 +89,16 @@ class ItineraryScorer:
         delta = abs(expected - actual)
         return round(max(0.0, 1.0 - (delta * 0.3)), 2)
 
-    def _editability(self, itinerary: Itinerary) -> float:
+    def _editability(self, request: TripRequest, itinerary: Itinerary) -> float:
         activities = list(self._activities(itinerary))
         if not activities:
             return 0.0
         stable_ids = all(bool(activity.stop_id) for activity in activities)
-        evenly_split = all(1 <= len(day.activities) <= 4 for day in itinerary.day_plans)
+        pace_upper_bound = {"slow": 2, "balanced": 3, "fast": 4}[request.pace]
+        max_daily_activities = max(4, pace_upper_bound)
+        evenly_split = all(
+            1 <= len(day.activities) <= max_daily_activities for day in itinerary.day_plans
+        )
         score = 0.5
         if stable_ids:
             score += 0.3
