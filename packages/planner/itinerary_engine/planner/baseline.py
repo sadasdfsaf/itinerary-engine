@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Iterable, List
+from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from itinerary_engine.candidate_selector.simple import SimpleCandidateSelector
 from itinerary_engine.schema.models import (
@@ -17,6 +17,14 @@ class BaselinePlanner:
         self.selector = selector
 
     def plan(self, request: TripRequest, candidate_limit: int = 8) -> Itinerary:
+        itinerary, _ = self.plan_with_trace(request, candidate_limit=candidate_limit)
+        return itinerary
+
+    def plan_with_trace(
+        self,
+        request: TripRequest,
+        candidate_limit: int = 8,
+    ) -> Tuple[Itinerary, Dict[str, Union[str, int]]]:
         max_stops = self.max_stops(request)
         needed = max(candidate_limit, request.days * max_stops)
         candidates = self.selector.select(request, limit=needed)
@@ -58,7 +66,7 @@ class BaselinePlanner:
             version=1,
         )
         itinerary.budget_summary = self.build_budget_summary(itinerary, request)
-        return itinerary
+        return itinerary, {"planner": "baseline", "candidate_count": len(candidates)}
 
     def max_stops(self, request: TripRequest) -> int:
         if request.pace == "slow":
@@ -117,7 +125,7 @@ class BaselinePlanner:
         itinerary.budget_summary = self.build_budget_summary(itinerary, request)
         return itinerary
 
-    def _theme_for(self, activities: Iterable[PlannedStop]) -> str:
+    def _theme_for(self, activities: Sequence[PlannedStop]) -> str:
         counter: Counter = Counter()
         for activity in activities:
             counter.update(activity.poi.tags)
@@ -125,11 +133,11 @@ class BaselinePlanner:
             return "mixed"
         return "{0}-led day".format(counter.most_common(1)[0][0])
 
-    def _area_for(self, activities: Iterable[PlannedStop]) -> str:
+    def _area_for(self, activities: Sequence[PlannedStop]) -> Optional[str]:
         districts = [activity.poi.district for activity in activities if activity.poi.district]
         return districts[0] if districts else None
 
-    def _notes_for_day(self, request: TripRequest, activities: Iterable[PlannedStop]) -> List[str]:
+    def _notes_for_day(self, request: TripRequest, activities: Sequence[PlannedStop]) -> List[str]:
         notes = []
         if request.pace == "slow":
             notes.append("Keep transitions loose and leave room for rest.")

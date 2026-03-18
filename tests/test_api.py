@@ -52,3 +52,19 @@ def test_plan_edit_score_api_flow() -> None:
     scored = score_response.json()
     assert scored["scores"]["overall"] >= 0
     assert scored["summary"]
+
+
+def test_edit_with_out_of_range_day_returns_conflict() -> None:
+    plan_response = client.post("/plan", json={"trip_request": _trip_request()})
+    planned = plan_response.json()
+
+    edit_response = client.post(
+        "/edit",
+        json={
+            "trip_request": _trip_request(),
+            "itinerary": planned["itinerary"],
+            "instruction": "Remove museum on day 99",
+        },
+    )
+
+    assert edit_response.status_code == 409

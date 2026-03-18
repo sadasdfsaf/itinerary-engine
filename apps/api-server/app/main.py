@@ -30,7 +30,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -51,14 +51,11 @@ def health() -> dict:
 @app.post("/plan", response_model=PlanResponse)
 def plan(payload: PlanRequest) -> PlanResponse:
     try:
-        itinerary = planner.plan(payload.trip_request, candidate_limit=payload.candidate_limit)
+        itinerary, trace = planner.plan_with_trace(
+            payload.trip_request,
+            candidate_limit=payload.candidate_limit,
+        )
         scores = scorer.score(payload.trip_request, itinerary)
-        trace = {
-            "planner": "baseline",
-            "candidate_count": len(
-                selector.select(payload.trip_request, limit=payload.candidate_limit)
-            ),
-        }
         return PlanResponse(itinerary=itinerary, scores=scores, trace=trace)
     except ValueError as exc:
         raise HTTPException(status_code=503, detail=str(exc))

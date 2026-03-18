@@ -107,9 +107,9 @@ class RuleBasedEditParser:
         raise EditParseError("Instruction does not match a supported edit pattern.")
 
     def _clean_phrase(self, value: str) -> str:
-        cleaned = value.strip().rstrip(".")
+        cleaned = value.strip().strip(".,!?;:，。！？；：、")
         lowered = cleaned.lower()
         for prefix in ("the ", "a ", "an "):
             if lowered.startswith(prefix):
-                return cleaned[len(prefix):].strip()
+                return cleaned[len(prefix):].strip(".,!?;:，。！？；：、 ")
         return cleaned

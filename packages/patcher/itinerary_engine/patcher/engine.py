@@ -126,7 +126,7 @@ class PatchEngine:
             cheaper_options = [
                 poi
                 for poi in cheaper_options
-                if poi.estimated_cost <= expensive.poi.estimated_cost
+                if poi.estimated_cost < expensive.poi.estimated_cost
             ]
             if cheaper_options:
                 cheaper = cheaper_options[0]
@@ -186,6 +186,8 @@ class PatchEngine:
         query = target_text.strip().lower()
         day_plans = itinerary.day_plans
         if preferred_day:
+            if preferred_day < 1 or preferred_day > len(itinerary.day_plans):
+                return None, None
             day_plans = [itinerary.day_plans[preferred_day - 1]]
         for day_plan in day_plans:
             for activity in day_plan.activities:
